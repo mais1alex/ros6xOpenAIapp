@@ -1,0 +1,7 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+routeros-api>=0.18.1
+paramiko>=3.4
+pyngrok>=7.2
+mcp[cli]>=1.13.0
