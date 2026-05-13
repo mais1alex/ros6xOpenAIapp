@@ -337,6 +337,7 @@ def create_mcp_oauth_app() -> FastAPI:
 
     @app.get("/.well-known/oauth-authorization-server")
     @app.get("/.well-known/oauth-authorization-server/mcp")
+    @app.get("/.well-known/openid-configuration")
     def oauth_metadata():
         base = public_base_url()
         return {
