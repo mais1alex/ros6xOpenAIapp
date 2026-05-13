@@ -4,8 +4,7 @@ services:
     container_name: mikrotik-ai-mcp
     restart: unless-stopped
     ports:
-      - "8080:8080"   # painel web local
-      - "8000:8000"   # endpoint MCP/OAuth
+      - "8282:8080"   # painel web local
     environment:
       ADMIN_PASSWORD: "troque-esta-senha"
       DATA_DIR: "/data"
