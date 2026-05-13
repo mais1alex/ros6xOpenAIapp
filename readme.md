@@ -4,8 +4,8 @@ Primeira versao simples para conectar ChatGPT ao MikroTik/RouterOS via MCP.
 
 ## O que sobe
 
-- Painel web local: `http://localhost:8080`
-- Servidor MCP/OAuth: `http://localhost:8000/mcp`
+- Painel web local: `http://dockerhost:8282`
+- Servidor MCP/OAuth: `https://url-gerada-pelo.ngrok-free.dev/mcp`
 - Configuracao persistente em volume Docker
 - Teste de conexao RouterOS API
 - OAuth para ChatGPT Developer Mode
@@ -20,7 +20,7 @@ docker compose up -d --build
 Acesse:
 
 ```text
-http://localhost:8080
+http://dockerhost:8282
 ```
 
 Senha padrao do compose:
@@ -37,8 +37,7 @@ Altere no `docker-compose.yml` antes de usar em ambiente real.
 docker run -d \
   --name mikrotik-ai-mcp \
   --restart unless-stopped \
-  -p 8080:8080 \
-  -p 8000:8000 \
+  -p 8282:8080 \
   -v mikrotik-ai-data:/data \
   -e ADMIN_PASSWORD='troque-esta-senha' \
   mikrotik-ai-mcp:latest
@@ -46,7 +45,7 @@ docker run -d \
 
 ## Fluxo de configuracao
 
-1. Acesse `http://localhost:8080`
+1. Acesse `http://dockerhost:8282`
 2. Configure host, usuario e senha do MikroTik
 3. Clique em **Testar MikroTik**
 4. Configure URL publica manual ou informe ngrok token
@@ -57,8 +56,7 @@ docker run -d \
 
 | Porta | Uso |
 |---|---|
-| 8080 | Painel web local |
-| 8000 | MCP/OAuth |
+| 8282 | Painel web local |
 
 Nao exponha a porta 8080 publicamente.
 
@@ -67,7 +65,7 @@ Nao exponha a porta 8080 publicamente.
 Use a URL publica do MCP:
 
 ```text
-https://seu-endereco-publico/mcp
+https://url-gerada-pelo.ngrok-free.dev/mcp
 ```
 
 Durante o OAuth, use o usuario e senha OAuth exibidos no painel.
@@ -78,4 +76,3 @@ Durante o OAuth, use o usuario e senha OAuth exibidos no painel.
 - As configuracoes ficam no volume `/data`.
 - O endpoint MCP exige OAuth.
 - A senha do MikroTik nao e exibida no formulario depois de salva.
-- Recomendacao: publicar publicamente apenas a porta MCP 8000 via ngrok/tunnel.
