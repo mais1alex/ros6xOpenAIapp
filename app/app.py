@@ -20,6 +20,11 @@ from fastapi.security.utils import get_authorization_scheme_param
 from mcp.server.fastmcp import FastMCP
 
 try:
+    from mcp.server.transport_security import TransportSecuritySettings
+except Exception:
+    TransportSecuritySettings = None
+
+try:
     import paramiko
 except Exception:
     paramiko = None
@@ -194,10 +199,30 @@ def ssh_exec(command: str) -> str:
 
 
 def create_mcp() -> FastMCP:
+    transport_security = None
+    if TransportSecuritySettings is not None:
+        # Necessario para uso atras de ngrok/proxy publico.
+        # O MCP SDK pode bloquear hosts nao-localhost com 421 Invalid Host header.
+        transport_security = TransportSecuritySettings(enable_dns_rebinding_protection=False)
+
     try:
-        server = FastMCP("mikrotik-ai", stateless_http=True, json_response=True)
+        server = FastMCP(
+            "mikrotik-ai",
+            stateless_http=True,
+            json_response=True,
+            host="0.0.0.0",
+            transport_security=transport_security,
+        )
     except TypeError:
-        server = FastMCP("mikrotik-ai")
+        try:
+            server = FastMCP(
+                "mikrotik-ai",
+                stateless_http=True,
+                json_response=True,
+                host="0.0.0.0",
+            )
+        except TypeError:
+            server = FastMCP("mikrotik-ai")
 
     @server.tool()
     def health() -> Dict[str, Any]:
@@ -294,7 +319,16 @@ def check_pkce(verifier: str, challenge: Optional[str], method: Optional[str]) -
 
 
 def create_mcp_oauth_app() -> FastAPI:
-    app = FastAPI(title="MikroTik AI MCP OAuth")
+    try:
+        mcp.settings.streamable_http_path = "/mcp"
+        mcp_app = mcp.streamable_http_app()
+    except Exception:
+        mcp_app = mcp.sse_app()
+
+    app = FastAPI(
+        title="MikroTik AI MCP OAuth",
+        lifespan=mcp_app.router.lifespan_context,
+    )
 
     @app.get("/")
     def root():
@@ -390,11 +424,6 @@ def create_mcp_oauth_app() -> FastAPI:
             return {"access_token": sign_with_secret(payload, cfg["oauth_secret"]), "token_type": "Bearer", "expires_in": 3600, "scope": payload.get("scope", "mcp")}
         raise HTTPException(400, "grant_type nao suportado")
 
-    try:
-        mcp.settings.streamable_http_path = "/mcp"
-        mcp_app = mcp.streamable_http_app()
-    except Exception:
-        mcp_app = mcp.sse_app()
     app.mount("/", BearerAuthMiddleware(mcp_app))
     return app
 
